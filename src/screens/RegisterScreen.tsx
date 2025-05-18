@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import CleverTap from 'clevertap-react-native';
+import {useNavigation} from '@react-navigation/native';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -17,8 +18,9 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const navigation = useNavigation<any>();
+
   const handleRegister = () => {
-    // Basic validation
     if (!name || !email || !phone || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill all fields.');
       return;
@@ -29,23 +31,19 @@ const RegisterScreen = () => {
       return;
     }
 
-    // Construct user profile object
     const userProfile = {
       Name: name,
-      Identity: email, // Using email as unique identity
+      Identity: email,
       Email: email,
       Phone: phone.startsWith('+') ? phone : `+${phone}`,
-      // Optional: Add more fields like Gender, DOB, etc.
     };
 
-    // Call CleverTap's onUserLogin
     CleverTap.onUserLogin(userProfile);
-
-    // Update user profile with password
     CleverTap.profileSet({Password: password});
 
     Alert.alert('Success', 'User profile created and sent to CleverTap.');
-    // Proceed with navigation or other logic
+
+    navigation.navigate('MainPage', {name}); // Navigate with name
   };
 
   return (
