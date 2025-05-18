@@ -1,7 +1,7 @@
-// src/screens/MovieHomeScreen.tsx
 import React, {useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, ActivityIndicator, View} from 'react-native';
 import HorizontalMovieSlider from './HorizontalMovieSlider';
+import {useCart} from '../context/CartContext'; // Import your cart hook
 
 const GENRES = [
   {id: 28, name: 'Action'},
@@ -14,6 +14,8 @@ const API_KEY = '3f3d99a0fd1f7198cfee2091f5b351bf'; // Replace with your TMDb AP
 const MovieHomeScreen = () => {
   const [moviesByGenre, setMoviesByGenre] = useState<any>({});
   const [loading, setLoading] = useState(true);
+
+  const {addToCart} = useCart(); // Get addToCart from context
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -32,7 +34,9 @@ const MovieHomeScreen = () => {
     fetchMovies();
   }, []);
 
+  // Use addToCart directly here
   const handleAddToCart = (movie: any) => {
+    addToCart(movie);
     console.log('Added to cart:', movie.title);
   };
 
@@ -51,7 +55,7 @@ const MovieHomeScreen = () => {
           key={genre.id}
           genre={genre.name}
           movies={moviesByGenre[genre.name]}
-          onAddToCart={handleAddToCart}
+          onAddToCart={handleAddToCart} // Pass the context-backed function down
         />
       ))}
     </ScrollView>

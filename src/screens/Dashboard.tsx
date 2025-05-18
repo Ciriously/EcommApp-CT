@@ -1,4 +1,3 @@
-// src/screens/MainPage.tsx
 import React, {useEffect} from 'react';
 import {ScrollView, StyleSheet} from 'react-native';
 import {useRoute} from '@react-navigation/native';
@@ -8,7 +7,7 @@ import Header from '../components/UI/Header';
 import BannerCarousel from '../components/UI/BannerCarousel';
 import MovieHomeScreen from '../components/MovieHomeScreen';
 
-const MainPage = () => {
+const Dashboard = () => {
   const route = useRoute<any>();
 
   const userName = route.params?.name || 'User';
@@ -27,7 +26,7 @@ const MainPage = () => {
     <ScrollView style={styles.container}>
       <Header name={userName} />
       <BannerCarousel />
-      <MovieHomeScreen /> {/* Embed the movie list here */}
+      <MovieHomeScreen />
     </ScrollView>
   );
 };
@@ -39,4 +38,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MainPage;
+export default Dashboard;

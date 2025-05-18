@@ -9,12 +9,21 @@ import {
   ScrollView,
 } from 'react-native';
 import CleverTap from 'clevertap-react-native';
-import {useNavigation} from '@react-navigation/native'; // ✅ Import navigation
+import {useNavigation} from '@react-navigation/native';
+
+type MainTabsParam = {
+  screen: string;
+  params: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+};
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  MainPage: {name: string};
+  MainTabs: MainTabsParam;
 };
 
 const LoginScreen = () => {
@@ -23,7 +32,7 @@ const LoginScreen = () => {
   const navigation =
     useNavigation<
       import('@react-navigation/native').NavigationProp<RootStackParamList>
-    >(); // ✅ Typed hook
+    >();
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -36,13 +45,20 @@ const LoginScreen = () => {
       Email: email,
     };
 
-    // Send user profile to CleverTap
+    // Track login with CleverTap
     CleverTap.onUserLogin(userProfile);
 
     Alert.alert('Success', 'User logged in.');
 
-    // ✅ Navigate to MainPage with user's email as param
-    navigation.navigate('MainPage', {name: email});
+    // ✅ Navigate to MainTabs -> Dashboard with props
+    navigation.navigate('MainTabs', {
+      screen: 'Dashboard',
+      params: {
+        name: email,
+        email: email,
+        phone: 'N/A', // Replace with actual phone if available
+      },
+    });
   };
 
   return (

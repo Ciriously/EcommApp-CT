@@ -38,12 +38,21 @@ const RegisterScreen = () => {
       Phone: phone.startsWith('+') ? phone : `+${phone}`,
     };
 
+    // Send user profile to CleverTap
     CleverTap.onUserLogin(userProfile);
     CleverTap.profileSet({Password: password});
 
     Alert.alert('Success', 'User profile created and sent to CleverTap.');
 
-    navigation.navigate('MainPage', {name}); // Navigate with name
+    // Navigate to MainTabs > Dashboard with user data
+    navigation.navigate('MainTabs', {
+      screen: 'Dashboard',
+      params: {
+        name,
+        email,
+        phone: phone.startsWith('+') ? phone : `+${phone}`,
+      },
+    });
   };
 
   return (
