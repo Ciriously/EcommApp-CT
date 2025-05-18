@@ -22,9 +22,8 @@ import firebase from '@react-native-firebase/app';
 const App = () => {
   return (
     <CartProvider>
-      <Toast />
-
       <AppNavigator />
+      <Toast />
     </CartProvider>
   );
 };

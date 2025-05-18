@@ -9,10 +9,12 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
+  Animated,
 } from 'react-native';
 import CleverTap from 'clevertap-react-native';
+import Toast from 'react-native-toast-message';
 
-const {width} = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 interface Movie {
   id: number;
@@ -21,6 +23,7 @@ interface Movie {
   poster_path: string;
   release_date: string;
   vote_average: number;
+  price?: number;
 }
 
 interface Props {
@@ -36,12 +39,17 @@ const HorizontalMovieSlider: React.FC<Props> = ({
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   const openModal = (movie: Movie) => {
     setSelectedMovie(movie);
     setModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
 
-    // 🔥 Track Product Viewed
     CleverTap.recordEvent('Product Viewed', {
       'Product Name': movie.title,
       Category: genre,
@@ -51,18 +59,38 @@ const HorizontalMovieSlider: React.FC<Props> = ({
     });
   };
 
+  const closeModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setModalVisible(false));
+  };
+
   const handleAddToCart = () => {
     if (selectedMovie) {
-      onAddToCart(selectedMovie);
+      const movieWithPrice = {
+        ...selectedMovie,
+        price: 9.99,
+      };
 
-      // 🛒 Track Add to Cart
+      onAddToCart(movieWithPrice);
+
       CleverTap.recordEvent('Add to Cart', {
         'Product Name': selectedMovie.title,
         Category: genre,
         MovieID: selectedMovie.id,
+        Price: 9.99,
       });
 
-      setModalVisible(false);
+      Toast.show({
+        type: 'success',
+        text1: '🎬 Added to Cart!',
+        text2: `${selectedMovie.title} was added to your cart`,
+        position: 'bottom',
+      });
+
+      closeModal();
     }
   };
 
@@ -74,8 +102,12 @@ const HorizontalMovieSlider: React.FC<Props> = ({
         keyExtractor={item => item.id.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
         renderItem={({item}) => (
-          <TouchableOpacity onPress={() => openModal(item)} style={styles.card}>
+          <TouchableOpacity
+            onPress={() => openModal(item)}
+            style={styles.card}
+            activeOpacity={0.7}>
             <Image
               source={{
                 uri: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
@@ -85,18 +117,28 @@ const HorizontalMovieSlider: React.FC<Props> = ({
             <Text numberOfLines={1} style={styles.title}>
               {item.title}
             </Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingText}>
+                ⭐ {item.vote_average.toFixed(1)}
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
       />
 
-      {/* Modal */}
       <Modal
         visible={modalVisible}
         transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        animationType="fade"
+        onRequestClose={closeModal}>
+        <Animated.View style={[styles.modalOverlay, {opacity: fadeAnim}]}>
+          <Pressable style={styles.modalBackground} onPress={closeModal} />
+
           <View style={styles.modalContainer}>
+            <Pressable style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>❌</Text>
+            </Pressable>
+
             {selectedMovie && (
               <>
                 <Image
@@ -105,22 +147,46 @@ const HorizontalMovieSlider: React.FC<Props> = ({
                   }}
                   style={styles.modalImage}
                 />
-                <Text style={styles.modalTitle}>{selectedMovie.title}</Text>
-                <Text style={styles.modalSub}>
-                  Released: {selectedMovie.release_date} | ⭐{' '}
-                  {selectedMovie.vote_average}
-                </Text>
-                <Text style={styles.modalOverview}>
-                  {selectedMovie.overview}
-                </Text>
 
-                <Pressable style={styles.addButton} onPress={handleAddToCart}>
-                  <Text style={styles.addButtonText}>Add to Cart</Text>
-                </Pressable>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>{selectedMovie.title}</Text>
+
+                  <View style={styles.metaContainer}>
+                    <View style={styles.metaItem}>
+                      <Text>📅</Text>
+                      <Text style={styles.metaText}>
+                        {new Date(selectedMovie.release_date).getFullYear()}
+                      </Text>
+                    </View>
+
+                    <View style={styles.metaItem}>
+                      <Text>⭐</Text>
+                      <Text style={styles.metaText}>
+                        {selectedMovie.vote_average.toFixed(1)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.metaItem}>
+                      <Text>💰</Text>
+                      <Text style={styles.metaText}>9.99</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.modalOverview}>
+                    {selectedMovie.overview || 'No overview available.'}
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={handleAddToCart}
+                    activeOpacity={0.8}>
+                    <Text style={styles.addButtonText}>🛒 Add to Cart</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             )}
           </View>
-        </View>
+        </Animated.View>
       </Modal>
     </View>
   );
@@ -128,79 +194,143 @@ const HorizontalMovieSlider: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginVertical: 12,
+    marginVertical: 16,
+  },
+  listContent: {
+    paddingHorizontal: 12,
   },
   genreTitle: {
     fontSize: 20,
     fontWeight: '600',
-    marginBottom: 10,
-    marginLeft: 10,
-    fontFamily: 'Poppins-Medium',
+    marginBottom: 12,
+    marginLeft: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
   },
   card: {
-    width: 140,
-    marginHorizontal: 8,
-    alignItems: 'center',
+    width: 150,
+    height: 225,
+    marginRight: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   image: {
-    width: 140,
-    height: 210,
-    borderRadius: 10,
-    marginBottom: 5,
+    width: 150,
+    height: 225,
+    resizeMode: 'cover',
   },
   title: {
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Poppins-Medium',
     color: '#333',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+  },
+  ratingContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    color: '#fff',
   },
   modalOverlay: {
     flex: 1,
-    // backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContainer: {
-    width: width * 0.85,
+    width: width * 0.9,
+    maxHeight: height * 0.85,
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 8,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+  },
+  closeButtonText: {
+    fontSize: 18,
   },
   modalImage: {
-    width: 180,
-    height: 270,
-    borderRadius: 12,
-    marginBottom: 15,
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
+  },
+  modalContent: {
+    padding: 20,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
     fontFamily: 'Poppins-SemiBold',
-    marginBottom: 5,
+    color: '#333',
+    marginBottom: 12,
   },
-  modalSub: {
+  metaContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    justifyContent: 'space-around',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaText: {
     fontSize: 14,
-    color: '#777',
-    marginBottom: 10,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Poppins-Medium',
+    color: '#666',
+    marginLeft: 6,
   },
   modalOverview: {
-    fontSize: 14,
-    color: '#444',
+    fontSize: 15,
     fontFamily: 'Poppins-Regular',
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#444',
+    lineHeight: 22,
+    marginBottom: 24,
   },
   addButton: {
-    backgroundColor: '#000',
-    paddingHorizontal: 25,
-    paddingVertical: 12,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
     borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
   },
   addButtonText: {
     color: '#fff',
     fontFamily: 'Poppins-SemiBold',
-    fontSize: 15,
+    fontSize: 16,
   },
 });
 

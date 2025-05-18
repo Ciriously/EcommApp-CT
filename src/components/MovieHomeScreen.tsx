@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, ActivityIndicator, View} from 'react-native';
 import HorizontalMovieSlider from './HorizontalMovieSlider';
-import {useCart} from '../context/CartContext'; // Import your cart hook
+import {useCart} from '../context/CartContext';
+import Toast from 'react-native-toast-message';
 
 const GENRES = [
   {id: 28, name: 'Action'},
@@ -9,13 +10,12 @@ const GENRES = [
   {id: 18, name: 'Drama'},
 ];
 
-const API_KEY = '3f3d99a0fd1f7198cfee2091f5b351bf'; // Replace with your TMDb API key
+const API_KEY = '3f3d99a0fd1f7198cfee2091f5b351bf';
 
 const MovieHomeScreen = () => {
   const [moviesByGenre, setMoviesByGenre] = useState<any>({});
   const [loading, setLoading] = useState(true);
-
-  const {addToCart} = useCart(); // Get addToCart from context
+  const {addToCart} = useCart();
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -34,10 +34,23 @@ const MovieHomeScreen = () => {
     fetchMovies();
   }, []);
 
-  // Use addToCart directly here
   const handleAddToCart = (movie: any) => {
-    addToCart(movie);
-    console.log('Added to cart:', movie.title);
+    const cartItem = {
+      ...movie,
+      price: 9.99,
+      quantity: 1,
+    };
+
+    addToCart(cartItem);
+
+    Toast.show({
+      type: 'success',
+      position: 'top',
+      text1: '🎬 Added to Cart 🛒',
+      text2: movie.title,
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
   };
 
   if (loading) {
@@ -49,22 +62,28 @@ const MovieHomeScreen = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {GENRES.map(genre => (
-        <HorizontalMovieSlider
-          key={genre.id}
-          genre={genre.name}
-          movies={moviesByGenre[genre.name]}
-          onAddToCart={handleAddToCart} // Pass the context-backed function down
-        />
-      ))}
-    </ScrollView>
+    <View style={styles.mainContainer}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {GENRES.map(genre => (
+          <HorizontalMovieSlider
+            key={genre.id}
+            genre={genre.name}
+            movies={moviesByGenre[genre.name]}
+            onAddToCart={handleAddToCart}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
   container: {
     padding: 10,
+    paddingBottom: 20,
   },
   loader: {
     flex: 1,
