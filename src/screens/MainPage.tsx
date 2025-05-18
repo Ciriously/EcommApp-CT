@@ -1,9 +1,12 @@
 // src/screens/MainPage.tsx
 import React, {useEffect} from 'react';
-import {View, StyleSheet} from 'react-native';
+import {ScrollView, StyleSheet} from 'react-native';
 import {useRoute} from '@react-navigation/native';
-import Header from '../components/UI/Header';
 import CleverTap from 'clevertap-react-native';
+
+import Header from '../components/UI/Header';
+import BannerCarousel from '../components/UI/BannerCarousel';
+import MovieHomeScreen from '../components/MovieHomeScreen';
 
 const MainPage = () => {
   const route = useRoute<any>();
@@ -21,10 +24,11 @@ const MainPage = () => {
   }, [userName, email, phone]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Header name={userName} />
-      {/* Add e-commerce content here below */}
-    </View>
+      <BannerCarousel />
+      <MovieHomeScreen /> {/* Embed the movie list here */}
+    </ScrollView>
   );
 };
 

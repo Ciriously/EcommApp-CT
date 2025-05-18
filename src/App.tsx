@@ -1,9 +1,9 @@
+import 'react-native-reanimated';
 import React from 'react';
 import {AppNavigator} from './navigation/AppNavigator';
 import firebase from '@react-native-firebase/app';
 
 // if (!firebase.apps.length) {
-//   // Replace the below config with your actual Firebase config
 //   const firebaseConfig = {
 //     apiKey: 'YOUR_API_KEY',
 //     authDomain: 'YOUR_AUTH_DOMAIN',

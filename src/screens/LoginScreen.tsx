@@ -9,30 +9,40 @@ import {
   ScrollView,
 } from 'react-native';
 import CleverTap from 'clevertap-react-native';
+import {useNavigation} from '@react-navigation/native'; // ✅ Import navigation
+
+type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  MainPage: {name: string};
+};
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation =
+    useNavigation<
+      import('@react-navigation/native').NavigationProp<RootStackParamList>
+    >(); // ✅ Typed hook
 
   const handleLogin = () => {
-    // Basic validation
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
 
-    // Construct user profile object
     const userProfile = {
-      Identity: email, // Using email as unique identity
+      Identity: email,
       Email: email,
-      // Optional: Add more fields like Name, Phone, etc.
     };
 
-    // Call CleverTap's onUserLogin
+    // Send user profile to CleverTap
     CleverTap.onUserLogin(userProfile);
 
-    Alert.alert('Success', 'User logged in and profile sent to CleverTap.');
-    // Proceed with navigation or other logic
+    Alert.alert('Success', 'User logged in.');
+
+    // ✅ Navigate to MainPage with user's email as param
+    navigation.navigate('MainPage', {name: email});
   };
 
   return (
