@@ -1,4 +1,7 @@
 package com.ctreactnativeapp
+import com.clevertap.android.sdk.ActivityLifecycleCallback
+import com.clevertap.react.CleverTapPackage
+import com.clevertap.android.sdk.CleverTapAPI
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -34,7 +37,11 @@ class MainApplication : Application(), ReactApplication {
     get() = getDefaultReactHost(applicationContext, reactNativeHost)
 
   override fun onCreate() {
+        ActivityLifecycleCallback.register(this)
+
     super.onCreate()
+        CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.DEBUG)
+
     SoLoader.init(this, OpenSourceMergedSoMapping)
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
