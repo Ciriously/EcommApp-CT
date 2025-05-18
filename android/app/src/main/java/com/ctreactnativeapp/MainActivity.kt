@@ -14,26 +14,15 @@ class MainActivity : ReactActivity() {
     override fun getMainComponentName(): String = "CTReactNativeApp"
 
     override fun createReactActivityDelegate(): ReactActivityDelegate =
-        DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-    
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        
-        // Handle CleverTap push notification clicks
-        intent?.let { 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                CleverTapAPI.getDefaultInstance(applicationContext)?.pushNotificationClickedEvent(it.extras)
-            }
-        }
-    }
+      DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // Handle initial intent if needed
-        intent?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                CleverTapAPI.getDefaultInstance(applicationContext)?.pushNotificationClickedEvent(it.extras)
-            }
-        }
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+
+    // On Android 12 and onwards, raise notification clicked event and get the click callback
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(applicationContext)
+        cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
     }
+  }
 }

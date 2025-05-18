@@ -12,10 +12,11 @@ import {
   ImageSourcePropType,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import CleverTap from 'clevertap-react-native';
 
 interface HeaderProps {
   name: string;
-  profilePicUri?: string; // optional remote URI
+  profilePicUri?: string;
   onInboxPress?: () => void;
   onProfilePress?: () => void;
   showNotificationBadge?: boolean;
@@ -31,24 +32,73 @@ const Header: React.FC<HeaderProps> = ({
   const [profileImage, setProfileImage] = useState<ImageSourcePropType>(
     profilePicUri ? {uri: profilePicUri} : require('../../images/profile.png'),
   );
+  const [unreadCount, setUnreadCount] = useState(0);
   const insets = useSafeAreaInsets();
   const inboxIcon = require('../../images/appinbox.png');
 
-  // Handle potential image loading errors
+  // Initialize CleverTap Inbox
+  useEffect(() => {
+    CleverTap.initializeInbox();
+
+    CleverTap.addListener(
+      CleverTap.CleverTapInboxDidInitialize,
+      updateUnreadCount,
+    );
+
+    CleverTap.addListener(
+      CleverTap.CleverTapInboxMessagesDidUpdate,
+      updateUnreadCount,
+    );
+
+    return () => {
+      CleverTap.removeListener(CleverTap.CleverTapInboxDidInitialize);
+      CleverTap.removeListener(CleverTap.CleverTapInboxMessagesDidUpdate);
+    };
+  }, []);
+
+  const updateUnreadCount = () => {
+    CleverTap.getInboxMessageUnreadCount((err, res) => {
+      if (!err && res && typeof (res as any).count === 'number') {
+        setUnreadCount((res as any).count);
+      }
+    });
+  };
+
+  const handleInboxPress = () => {
+    if (onInboxPress) {
+      onInboxPress();
+    } else {
+      showAppInbox();
+    }
+  };
+
+  const showAppInbox = () => {
+    CleverTap.showInbox({
+      tabs: ['Offers', 'Promotions'],
+      navBarTitle: 'My App Inbox',
+      navBarTitleColor: '#FF0000',
+      navBarColor: '#FFFFFF',
+      inboxBackgroundColor: '#AED6F1',
+      backButtonColor: '#00FF00',
+      unselectedTabColor: '#0000FF',
+      selectedTabColor: '#FF0000',
+      selectedTabIndicatorColor: '#000000',
+      noMessageText: 'No message(s)',
+      noMessageTextColor: '#FF0000',
+    });
+  };
+
   useEffect(() => {
     if (profilePicUri) {
       setProfileImage({uri: profilePicUri});
     }
   }, [profilePicUri]);
 
-  // Animation for wave emoji
+  // Animations
   const waveAnim = useRef(new Animated.Value(0)).current;
-
-  // Animation for inbox icon when notification appears
   const notificationAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Wave animation
     const waveSequence = Animated.loop(
       Animated.sequence([
         Animated.timing(waveAnim, {
@@ -74,8 +124,7 @@ const Header: React.FC<HeaderProps> = ({
     );
     waveSequence.start();
 
-    // Notification animation if badge is shown
-    if (showNotificationBadge) {
+    if (showNotificationBadge || unreadCount > 0) {
       Animated.sequence([
         Animated.timing(notificationAnim, {
           toValue: 1,
@@ -91,10 +140,8 @@ const Header: React.FC<HeaderProps> = ({
       ]).start();
     }
 
-    return () => {
-      waveSequence.stop();
-    };
-  }, [waveAnim, notificationAnim, showNotificationBadge]);
+    return () => waveSequence.stop();
+  }, [waveAnim, notificationAnim, showNotificationBadge, unreadCount]);
 
   const waveInterpolation = waveAnim.interpolate({
     inputRange: [-1, 1],
@@ -111,7 +158,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top + 15}]}>
+    <View style={[styles.container, {paddingTop: insets.top + 10}]}>
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onProfilePress}
@@ -133,7 +180,6 @@ const Header: React.FC<HeaderProps> = ({
             ]}>
             👋
           </Animated.Text>
-          ,
         </Text>
         <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
           {name}
@@ -142,13 +188,15 @@ const Header: React.FC<HeaderProps> = ({
 
       <TouchableOpacity
         activeOpacity={0.6}
-        onPress={onInboxPress}
+        onPress={handleInboxPress}
         style={styles.inboxButton}>
         <Animated.Image
           source={inboxIcon}
           style={[styles.inboxIcon, {transform: [{scale: notificationScale}]}]}
         />
-        {showNotificationBadge && <View style={styles.badge} />}
+        {(showNotificationBadge || unreadCount > 0) && (
+          <View style={styles.badge} />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -156,75 +204,84 @@ const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
-    paddingBottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
+        shadowColor: 'rgba(0, 0, 0, 0.08)',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 1,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 3,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        elevation: 8,
+        borderBottomWidth: 0.5,
+        borderBottomColor: 'rgba(0, 0, 0, 0.08)',
       },
     }),
   },
   profileTouchable: {
-    borderRadius: 30,
-    overflow: 'hidden',
+    borderRadius: 28,
+    backgroundColor: '#F5F5F7',
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 16,
-    backgroundColor: '#f5f5f5',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   textContainer: {
     flex: 1,
-    marginRight: 16,
+    marginLeft: 16,
   },
   hello: {
-    fontSize: 18,
-    color: '#666',
+    fontSize: 16,
+    color: '#6B7280',
     fontFamily: 'Poppins-Regular',
-    marginBottom: -4,
+    letterSpacing: 0.2,
   },
   waveEmoji: {
-    fontSize: 20,
+    fontSize: 16,
   },
   name: {
-    fontSize: 24,
-    fontFamily: 'Poppins-ExtraBold',
-    color: '#222',
-    lineHeight: 28,
-    maxWidth: '90%',
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    marginTop: 2,
+    lineHeight: 24,
   },
   inboxButton: {
-    position: 'relative',
-    padding: 8,
+    width: 48,
+    height: 48,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F7',
   },
   inboxIcon: {
-    width: 28,
-    height: 28,
-    tintColor: '#555',
+    width: 22,
+    height: 22,
   },
   badge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF3B30',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
     borderWidth: 1.5,
-    borderColor: '#fff',
+    borderColor: '#F5F5F7',
   },
 });
 

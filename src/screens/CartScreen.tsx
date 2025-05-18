@@ -29,25 +29,37 @@ const CartScreen = () => {
   }, [fadeAnim]);
 
   const handleCheckout = () => {
-    // Record charge event for each item in cart
-    cartItems.forEach(item => {
-      clevertap.recordEvent('Charged', {
-        'Product Name': item.title,
-        'Product ID': item.id,
-        Price: item.price,
-        Date: new Date().toISOString(),
-        Quantity: 1,
-        Category: 'Movie', // or whatever category fits your app
-        Currency: 'USD',
-        'Payment Method': 'In-App', // adjust as needed
-      });
-    });
+    // Calculate total amount
+    const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+
+    // Prepare items data for CleverTap
+    const itemsData = cartItems.map((item, index) => ({
+      [`Item ${index + 1} ID`]: item.id,
+      [`Item ${index + 1} Name`]: item.title,
+      [`Item ${index + 1} Price`]: item.price,
+    }));
+
+    // Combine all properties into single object
+    const eventProperties = {
+      'Transaction Date': new Date().toISOString(),
+      'Total Amount': totalAmount,
+      'Item Count': cartItems.length,
+      'Payment Method': 'In-App',
+      Currency: 'USD',
+      ...itemsData.reduce((acc, item) => ({...acc, ...item}), {}),
+      'Movie Names': cartItems.map(item => item.title).join(', '), // All movie names in one property
+    };
+
+    // Record single charged event with all items
+    clevertap.recordEvent('Charged', eventProperties);
 
     // Show success toast
     Toast.show({
       type: 'success',
       text1: 'Payment Successful',
-      text2: `You've been charged for ${cartItems.length} items`,
+      text2: `You've been charged for ${
+        cartItems.length
+      } items ($${totalAmount.toFixed(2)})`,
       visibilityTime: 3000,
       position: 'bottom',
     });

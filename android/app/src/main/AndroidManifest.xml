@@ -34,7 +34,6 @@
 <meta-data
     android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
     android:value="1"/>
-
 <!--    <meta-data -->
 <!--android:name="CLEVERTAP_REGION" -->
 <!--android:value="in1"/>-->
@@ -44,5 +43,6 @@
                         <action android:name="com.google.firebase.MESSAGING_EVENT" />
                     </intent-filter>
                 </service>
+
     </application>
 </manifest>
