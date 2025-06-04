@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "924868403421",
-    "project_id": "ctreactnativeapp",
-    "storage_bucket": "ctreactnativeapp.firebasestorage.app"
+    "project_number": "978516760293",
+    "project_id": "ctreactnativeapplication",
+    "storage_bucket": "ctreactnativeapplication.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:924868403421:android:b6455db31b3de8caf83b34",
+        "mobilesdk_app_id": "1:978516760293:android:d98604dc0f2bf52001660c",
         "android_client_info": {
           "package_name": "com.ctreactnativeapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDRjsTyvKdop5lDLo7p8qF4yVfkG7zT6XQ"
+          "current_key": "AIzaSyDFzfRx-Xu3VAQwC-6SiTKTnMghL9FTk3U"
         }
       ],
       "services": {

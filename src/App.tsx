@@ -13,23 +13,20 @@ const App = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 1. Setup notification channels (Android only)
         if (Platform.OS === 'android') {
           await setupNotificationChannels();
         }
 
-        // 2. Request notification permissions (iOS only)
         if (Platform.OS === 'ios') {
           await requestNotificationPermissions();
         }
 
-        // 3. Check and show notification primer if needed
         await checkAndShowNotificationPrimer();
 
         setInitialized(true);
       } catch (error) {
         console.error('Initialization error:', error);
-        setInitialized(true); // Continue app even if initialization fails
+        setInitialized(true);
       }
     };
 
@@ -43,15 +40,15 @@ const App = () => {
           'CT_PRIMARY_CHANNEL',
           'Essential Notifications',
           'Important account updates',
-          4, // High importance
-          true, // Enable vibration
+          4,
+          true,
         ),
         CleverTap.createNotificationChannel(
           'CT_PROMOTIONS_CHANNEL',
           'Special Offers',
           'Personalized deals',
-          3, // Default importance
-          false, // No vibration
+          3,
+          false,
         ),
       ]);
     } catch (error) {
@@ -90,7 +87,6 @@ const App = () => {
         followDeviceOrientation: true,
         positiveBtnText: 'Allow',
         negativeBtnText: 'Cancel',
-        // Optional parameters:
         backgroundColor: '#FFFFFF',
         btnBorderColor: '#0000FF',
         titleTextColor: '#0000FF',
@@ -98,7 +94,7 @@ const App = () => {
         btnTextColor: '#FFFFFF',
         btnBackgroundColor: '#0000FF',
         btnBorderRadius: '2',
-        fallbackToSettings: true, //Setting this parameter to true will open an in-App to redirect you to Mobile's OS settings page.
+        fallbackToSettings: true,
       });
       await AsyncStorage.setItem('@notificationPrimerShown', 'true');
     } catch (error) {
@@ -107,7 +103,7 @@ const App = () => {
   };
 
   if (!initialized) {
-    return null; // Or show a splash screen
+    return null;
   }
 
   return (
