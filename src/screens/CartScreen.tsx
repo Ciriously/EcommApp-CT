@@ -29,29 +29,36 @@ const CartScreen = () => {
   }, [fadeAnim]);
 
   const handleCheckout = () => {
-    // Calculate total amount
-    const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+    const totalAmount = cartItems.reduce(
+      (sum, item) => sum + (item.price || 0),
+      0,
+    );
 
-    // Prepare items data for CleverTap
-    const itemsData = cartItems.map((item, index) => ({
-      [`Item ${index + 1} ID`]: item.id,
-      [`Item ${index + 1} Name`]: item.title,
-      [`Item ${index + 1} Price`]: item.price,
-    }));
-
-    // Combine all properties into single object
-    const eventProperties = {
-      'Transaction Date': new Date().toISOString(),
-      'Total Amount': totalAmount,
-      'Item Count': cartItems.length,
-      'Payment Method': 'In-App',
-      Currency: 'USD',
-      ...itemsData.reduce((acc, item) => ({...acc, ...item}), {}),
-      'Movie Names': cartItems.map(item => item.title).join(', '), // All movie names in one property
+    // Prepare charge details object
+    const chargeDetails = {
+      totalValue: totalAmount,
+      category: 'movies', // or any other relevant category
+      purchase_date: new Date(),
+      payment_method: 'In-App',
+      currency: 'USD',
+      item_count: cartItems.length,
     };
 
-    // Record single charged event with all items
-    clevertap.recordEvent('Charged', eventProperties);
+    // Prepare items array
+    const items = cartItems.map(item => ({
+      title: item.title,
+      price: item.price,
+      id: item.id,
+      poster:
+        item.image ||
+        (item.poster_path
+          ? `${TMDB_IMAGE_BASE_URL}${item.poster_path}`
+          : undefined),
+      description: item.description,
+    }));
+
+    // Send to CleverTap
+    clevertap.recordChargedEvent(chargeDetails, items);
 
     // Show success toast
     Toast.show({
@@ -64,7 +71,6 @@ const CartScreen = () => {
       position: 'bottom',
     });
 
-    // Clear cart after successful checkout
     clearCart();
   };
 

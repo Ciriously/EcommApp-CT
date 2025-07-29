@@ -45,6 +45,8 @@ const Dashboard = () => {
     };
   }, [userName, email, phone]);
 
+  //!! ADD THIS - InApp campaign After 5 pauses by the user, trigger an In-App Campaign (create this manually on CleverTap dashboard using below criteria):Trigger Condition: Show when a video_paused event has happened 5 times in the same session.
+
   return (
     <>
       <ScrollView style={styles.container}>
