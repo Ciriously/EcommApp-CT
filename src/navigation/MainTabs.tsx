@@ -1,4 +1,3 @@
-// src/navigation/MainTabs.tsx
 import React from 'react';
 import {Text} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -6,11 +5,13 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Dashboard from '../screens/Dashboard';
 import CartScreen from '../screens/CartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import SearchScreen from '../screens/SearchScreen'; // 👈 Import the new screen
 
 const Tab = createBottomTabNavigator();
 
 const emojiMap: Record<string, string> = {
   Dashboard: '🏠',
+  Search: '🔍',
   Cart: '🛒',
   Profile: '👤',
 };
@@ -34,6 +35,7 @@ const MainTabs = () => (
       ),
     })}>
     <Tab.Screen name="Dashboard" component={Dashboard} />
+    <Tab.Screen name="Search" component={SearchScreen} />
     <Tab.Screen name="Cart" component={CartScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
