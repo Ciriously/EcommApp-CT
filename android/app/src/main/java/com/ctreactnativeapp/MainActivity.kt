@@ -16,13 +16,21 @@ class MainActivity : ReactActivity() {
     override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-  override fun onNewIntent(intent: Intent?) {
+  /**
+   * This function handles new intents, such as a push notification click
+   * when the app is already open.
+   */
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
 
-    // On Android 12 and onwards, raise notification clicked event and get the click callback
+    // On Android 12+, we need to manually process the notification click.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(applicationContext)
-        cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
+        // Use a null-safe 'let' block. This is safer than intent!! and prevents crashes.
+        intent?.let {
+            val cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(applicationContext)
+            // 'it' refers to the non-null intent inside this block
+            cleverTapDefaultInstance?.pushNotificationClickedEvent(it.extras)
+        }
     }
   }
 }
