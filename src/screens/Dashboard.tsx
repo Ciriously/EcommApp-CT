@@ -7,7 +7,7 @@ import Header from '../components/UI/Header';
 import BannerCarousel from '../components/UI/BannerCarousel';
 import MovieHomeScreen from '../components/MovieHomeScreen';
 import {NativeDisplayCard} from '../components/NativeDisplayCard';
-import VideoPlayer from '../components/VideoPlayer';
+import ImagePlayer from '../components/UI/ImagePlayer';
 
 const Dashboard = () => {
   const route = useRoute<any>();
@@ -60,7 +60,7 @@ const Dashboard = () => {
           />
         )}
         <BannerCarousel />
-        <VideoPlayer />
+        <ImagePlayer />
 
         <MovieHomeScreen />
       </ScrollView>
